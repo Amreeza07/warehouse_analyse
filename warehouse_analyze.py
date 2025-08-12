@@ -1,11 +1,8 @@
 import numpy as np
 import pandas as pd
+import matplotlib.pyplot as plt
 import random
 from datetime import datetime, timedelta
-import dash
-from dash import dcc, html
-import dash_bootstrap_components as dbc
-import plotly.express as px
 
 # Generate synthetic warehouse usage data
 def generate_synthetic_data(minutes=1440):
@@ -41,48 +38,29 @@ def analyze_efficiency(data):
     }
     return summary
 
-# Generate data and summary
+# Visualize usage metrics
+def visualize_metrics(data):
+    plt.figure(figsize=(12, 6))
+    plt.plot(data['Timestamp'], data['CPU_Usage'], label='CPU Usage (%)')
+    plt.plot(data['Timestamp'], data['Memory_Usage'], label='Memory Usage (%)')
+    plt.xlabel('Time')
+    plt.ylabel('Usage (%)')
+    plt.title('Warehouse CPU and Memory Usage Over Time')
+    plt.legend()
+    plt.tight_layout()
+    plt.savefig("warehouse_usage_plot.png")
+    plt.close()
+
+# Main execution
 data = generate_synthetic_data()
 summary = analyze_efficiency(data)
+visualize_metrics(data)
 
-# Create dashboard app
-app = dash.Dash(__name__, external_stylesheets=[dbc.themes.BOOTSTRAP])
-app.title = "Warehouse Efficiency Analyzer"
-
-# Layout
-app.layout = dbc.Container([
-    html.H1("Warehouse Efficiency Analyzer Dashboard", className="my-4"),
-    dbc.Row([
-        dbc.Col([
-            html.H5("Summary Metrics"),
-            html.Ul([
-                html.Li(f"Idle Time (minutes): {summary['Idle Time (minutes)']}"),
-                html.Li(f"Over-Provisioned Time (minutes): {summary['Over-Provisioned Time (minutes)']}"),
-                html.Li(f"Auto-Scaling Events: {summary['Auto-Scaling Events']}")
-            ])
-        ], width=6),
-        dbc.Col([
-            html.H5("Recommendations"),
-            html.Ul([html.Li(rec) for rec in summary['Recommendations']])
-        ], width=6)
-    ]),
-    html.Hr(),
-    dbc.Row([
-        dbc.Col([
-            dcc.Graph(figure=px.line(data, x='Timestamp', y='CPU_Usage', title='CPU Usage Over Time'))
-        ], width=6),
-        dbc.Col([
-            dcc.Graph(figure=px.line(data, x='Timestamp', y='Memory_Usage', title='Memory Usage Over Time'))
-        ], width=6)
-    ]),
-    dbc.Row([
-        dbc.Col([
-            dcc.Graph(figure=px.bar(data[data['AutoScalingEvent'] == 1], x='Timestamp', y='AutoScalingEvent',
-                                    title='Auto-Scaling Events'))
-        ])
-    ])
-], fluid=True)
-
-# Run the app
-if __name__ == "__main__":
-    app.run_server(debug=False)
+# Print summary
+print("Warehouse Efficiency Analysis Summary:")
+for key, value in summary.items():
+    if isinstance(value, list):
+        for rec in value:
+            print(f"- {rec}")
+    else:
+        print(f"{key}: {value}")
