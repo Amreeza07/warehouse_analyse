@@ -1,3 +1,5 @@
 numpy
 pandas
 random
+dash
+dash-bootstrap-components
